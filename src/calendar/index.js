@@ -126,20 +126,39 @@ class Calendar extends Component {
     });
   }
 
-  _handleDayInteraction(date, interaction) {
-    const day = parseDate(date);
-    const minDate = parseDate(this.props.minDate);
-    const maxDate = parseDate(this.props.maxDate);
+_handleDayInteraction(date, interaction) {
+  const day = parseDate(date);
+  const minDate = parseDate(this.props.minDate);
+  const maxDate = parseDate(this.props.maxDate);
+    var today = day.toString();
+    var contains = false;
+    for (var key in this.props.calendars) {
+
+        const min = parseDate(this.props.calendars[key].beginDate);
+        const max = parseDate(this.props.calendars[key].endDate) ;
+
+        if (!((min && !dateutils.isGTE(day, min)) || (min && !dateutils.isLTE(day, max)))) {
+
+            console.log('000000=>'+JSON.stringify((day)))
+            contains = true;
+        }
+    }
+    if (contains === true) {
+      console.log('xxxxxxxxxxxxxxxxxxxxxxxx')
+    } else  {
+      console.log('00000000000000000000000')
+    }
     if (!(minDate && !dateutils.isGTE(day, minDate)) && !(maxDate && !dateutils.isLTE(day, maxDate))) {
-      const shouldUpdateMonth = this.props.disableMonthChange === undefined || !this.props.disableMonthChange;
-      if (shouldUpdateMonth) {
-        this.updateMonth(day);
-      }
-      if (interaction) {
-        interaction(xdateToData(day));
-      }
+    const shouldUpdateMonth = this.props.disableMonthChange === undefined || !this.props.disableMonthChange;
+    if (shouldUpdateMonth) {
+      this.updateMonth(day);
+    }
+    if (interaction && contains === true) {
+      console.log('xxxxxxx')
+      interaction(xdateToData(day));
     }
   }
+}
 
   pressDay(date) {
     this._handleDayInteraction(date, this.props.onDayPress);
@@ -153,45 +172,64 @@ class Calendar extends Component {
     this.updateMonth(this.state.currentMonth.clone().addMonths(count, true));
   }
 
-  renderDay(day, id) {
-    const minDate = parseDate(this.props.minDate);
-    const maxDate = parseDate(this.props.maxDate);
-    let state = '';
-    if (this.props.disabledByDefault) {
-      state = 'disabled';
-    } else if ((minDate && !dateutils.isGTE(day, minDate)) || (maxDate && !dateutils.isLTE(day, maxDate))) {
-      state = 'disabled';
-    } else if (!dateutils.sameMonth(day, this.state.currentMonth)) {
-      state = 'disabled';
-    } else if (dateutils.sameDate(day, XDate())) {
-      state = 'today';
+renderDay(day, id) {
+
+    var today = day.toString();
+    var contains = false;
+    for (var key in this.props.calendars) {
+
+        const min = parseDate(this.props.calendars[key].beginDate);
+        const max = parseDate(this.props.calendars[key].endDate) ;
+
+        if (!((min && !dateutils.isGTE(day, min)) || (min && !dateutils.isLTE(day, max)))) {
+
+           console.log('000000=>'+JSON.stringify((day)))
+           contains = true;
+        }
     }
-    let dayComp;
-    if (!dateutils.sameMonth(day, this.state.currentMonth) && this.props.hideExtraDays) {
-      if (['period', 'multi-period'].includes(this.props.markingType)) {
-        dayComp = (<View key={id} style={{flex: 1}}/>);
-      } else {
-        dayComp = (<View key={id} style={this.style.dayContainer}/>);
-      }
-    } else {
-      const DayComp = this.getDayComponent();
-      const date = day.getDate();
-      dayComp = (
-        <DayComp
-          key={id}
-          state={state}
-          theme={this.props.theme}
-          onPress={this.pressDay}
-          onLongPress={this.longPressDay}
-          date={xdateToData(day)}
-          marking={this.getDateMarking(day)}
-        >
-          {date}
-        </DayComp>
-      );
-    }
-    return dayComp;
+
+  const minDate = parseDate(this.props.minDate);
+  const maxDate = parseDate(this.props.maxDate);
+  let state = '';
+  if (this.props.disabledByDefault) {
+    state = 'disabled';
+  }  else if (!dateutils.sameMonth(day, this.state.currentMonth)) {
+    state = 'disabled';
+  } else if (dateutils.sameDate(day, XDate())) {
+    state = 'today';
   }
+  if (contains === false) {
+    console.log('xxx->'+ state);
+    console.log(JSON.stringify(day))
+      state = 'disabled';
+  }
+
+  let dayComp;
+  if (!dateutils.sameMonth(day, this.state.currentMonth) && this.props.hideExtraDays) {
+    if (['period', 'multi-period'].includes(this.props.markingType)) {
+      dayComp = (<View key={id} style={{flex: 1}}/>);
+    } else {
+      dayComp = (<View key={id} style={this.style.dayContainer}/>);
+    }
+  } else {
+    const DayComp = this.getDayComponent();
+    const date = day.getDate();
+    dayComp = (
+      <DayComp
+        key={id}
+        state={state}
+        theme={this.props.theme}
+        onPress={this.pressDay}
+        onLongPress={this.longPressDay}
+        date={xdateToData(day)}
+        marking={this.getDateMarking(day)}
+      >
+        {date}
+      </DayComp>
+    );
+  }
+  return dayComp;
+}
 
   getDayComponent() {
     if (this.props.dayComponent) {
